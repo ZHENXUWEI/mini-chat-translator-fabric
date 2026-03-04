@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "mini-chat-translator",
+	"version": "${version}",
+	"name": "Mini Chat Translator",
+	"description": "翻译聊天框里的英文消息！",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/mini-chat-translator/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"cn.islys.MiniChatTranslatorClient"
+		]
+	},
+	"mixins": [
+		"mini-chat-translator.mixins.json",
+		{
+			"config": "mini-chat-translator.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
