@@ -1,5 +1,6 @@
 package cn.islys.util;
 
+import cn.islys.config.ClothConfig;
 import cn.islys.config.ModConfig;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -20,12 +21,12 @@ public class Translator {
      * @return 翻译后的中文，如果失败则返回 null
      */
     public static String translate(String text) {
-        String appId = ModConfig.getAppId();
-        String secretKey = ModConfig.getSecretKey();
+        ClothConfig config = ClothConfig.get();
+        String appId = config.getAppId();
+        String secretKey = config.getSecretKey();
 
-        // 检查配置是否填写
         if (appId.isEmpty() || secretKey.isEmpty()) {
-            return "[请先在配置文件中填写百度翻译 APP ID 和密钥]";
+            return "[请在 Mod Menu 中配置百度翻译 API 密钥]";
         }
 
         // 生成随机数

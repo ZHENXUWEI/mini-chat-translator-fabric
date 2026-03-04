@@ -17,20 +17,17 @@
 	"entrypoints": {
 		"client": [
 			"cn.islys.MiniChatTranslatorClient"
-		]
+		],
+        "modmenu": [
+          "cn.islys.config.ModMenuIntegration"
+        ]
 	},
-	"mixins": [
-		"mini-chat-translator.mixins.json",
-		{
-			"config": "mini-chat-translator.client.mixins.json",
-			"environment": "client"
-		}
-	],
 	"depends": {
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.11",
 		"java": ">=21",
 		"fabric-api": "*",
-        "fabric-language-kotlin": ">=1.12.3"
+        "fabric-language-kotlin": ">=1.12.3",
+        "cloth-config": ">=17.0.144"
 	}
 }
