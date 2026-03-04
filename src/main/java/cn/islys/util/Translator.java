@@ -8,13 +8,14 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class Translator {
     private static final String BAIDU_API_URL = "https://fanyi-api.baidu.com/api/trans/vip/translate";
     private static final OkHttpClient CLIENT = new OkHttpClient();
 
     /**
-     * 翻译文本（自动检测源语言，翻译成中文）
+     * 同步翻译（会阻塞调用线程）
      * @param text 要翻译的英文文本
      * @return 翻译后的中文，如果失败则返回 null
      */
@@ -75,6 +76,15 @@ public class Translator {
             e.printStackTrace();
             return "[网络错误: " + e.getMessage() + "]";
         }
+    }
+
+    /**
+     * 异步翻译 - 在新线程中执行，不会阻塞调用线程
+     * @param text 要翻译的文本
+     * @return CompletableFuture，完成后包含翻译结果
+     */
+    public static CompletableFuture<String> translateAsync(String text) {
+        return CompletableFuture.supplyAsync(() -> translate(text));
     }
 
     /**
