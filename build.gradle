@@ -31,6 +31,7 @@ repositories {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/releases/"
     }
+
 }
 
 loom {
@@ -78,6 +79,10 @@ dependencies {
     // Mod Menu
     modCompileOnly "com.terraformersmc:modmenu:17.0.0-beta.2"
     modLocalRuntime "com.terraformersmc:modmenu:17.0.0-beta.2"
+
+    // 添加 Notify
+    modImplementation "de.hglabor:notify:1.3.0"
+    include "de.hglabor:notify:1.3.0"
 }
 
 processResources {
