@@ -8,8 +8,8 @@
 		"Real_SShwer"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/ZHENXUWEI/mini-chat-translator-fabric",
+		"sources": "https://github.com/ZHENXUWEI/mini-chat-translator-fabric"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/mini-chat-translator/icon.png",
