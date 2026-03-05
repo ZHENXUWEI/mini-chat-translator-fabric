@@ -3,31 +3,21 @@ package cn.islys.config;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
-import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 
 @Config(name = "mini-chat-translator")
 public class ClothConfig implements ConfigData {
-
-    @ConfigEntry.Gui.Tooltip
-    @ConfigEntry.Gui.PrefixText
     private String appId = "";
-
-    @ConfigEntry.Gui.Tooltip
     private String secretKey = "";
-
-    // 开关翻译功能
-    @ConfigEntry.Gui.Tooltip
     private boolean enabled = true;
-
-    // 是否翻译自己的消息
-    @ConfigEntry.Gui.Tooltip
     private boolean translateOwn = true;
 
+    // 添加这个静态初始化方法
     public static void init() {
         AutoConfig.register(ClothConfig.class, Toml4jConfigSerializer::new);
     }
 
+    // 添加这个静态 get 方法！
     public static ClothConfig get() {
         return AutoConfig.getConfigHolder(ClothConfig.class).getConfig();
     }

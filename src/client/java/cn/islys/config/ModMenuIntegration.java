@@ -10,8 +10,8 @@ import net.fabricmc.api.Environment;
 public class ModMenuIntegration implements ModMenuApi {
 
     @Override
-    @SuppressWarnings("removal")  // 压制过时API警告
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> AutoConfig.getConfigScreen(ClothConfig.class, parent).get();
+        // 直接返回自定义的屏幕创建方法
+        return CustomConfigScreen::create;
     }
 }
