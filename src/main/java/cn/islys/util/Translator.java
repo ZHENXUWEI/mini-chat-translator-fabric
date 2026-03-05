@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import okhttp3.*;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -33,7 +34,10 @@ public class Translator {
         String salt = UUID.randomUUID().toString().substring(0, 8);
 
         // 计算签名 sign = appId + text + salt + secretKey 的 MD5
-        String sign = md5(appId + text + salt + secretKey);
+        // 在拼接前，将 text 明确转换为 UTF-8 字节数组
+        String signStr = appId + text + salt + secretKey;
+        // 使用 getBytes 指定编码
+        String sign = md5(signStr.getBytes(StandardCharsets.UTF_8));
 
         // 构建请求
         RequestBody body = new FormBody.Builder()
@@ -91,10 +95,10 @@ public class Translator {
     /**
      * 计算 MD5
      */
-    private static String md5(String input) {
+    private static String md5(byte[] input) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(input.getBytes());
+            byte[] digest = md.digest(input); // 直接对字节数组进行哈希
             StringBuilder sb = new StringBuilder();
             for (byte b : digest) {
                 sb.append(String.format("%02x", b & 0xff));
