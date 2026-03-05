@@ -12,12 +12,13 @@ public class ClothConfig implements ConfigData {
     private boolean enabled = true;
     private boolean translateOwn = true;
 
-    // 添加这个静态初始化方法
+    // 是否将中文翻译成英文发送
+    private boolean chineseToEnglish = true;
+
     public static void init() {
         AutoConfig.register(ClothConfig.class, Toml4jConfigSerializer::new);
     }
 
-    // 添加这个静态 get 方法！
     public static ClothConfig get() {
         return AutoConfig.getConfigHolder(ClothConfig.class).getConfig();
     }
@@ -34,4 +35,7 @@ public class ClothConfig implements ConfigData {
 
     public boolean isTranslateOwn() { return translateOwn; }
     public void setTranslateOwn(boolean translateOwn) { this.translateOwn = translateOwn; }
+
+    public boolean isChineseToEnglish() { return chineseToEnglish; }
+    public void setChineseToEnglish(boolean chineseToEnglish) { this.chineseToEnglish = chineseToEnglish; }
 }

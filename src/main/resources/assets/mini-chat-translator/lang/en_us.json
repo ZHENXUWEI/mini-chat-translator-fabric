@@ -1,12 +1,19 @@
 {
   "text.autoconfig.mini-chat-translator.title": "Mini Chat Translator Config",
   "text.autoconfig.mini-chat-translator.category.general": "General Settings",
+
   "text.autoconfig.mini-chat-translator.option.appId": "Baidu Translate APP ID",
   "text.autoconfig.mini-chat-translator.option.appId.@Tooltip": "APP ID from Baidu Translate Open Platform",
+
   "text.autoconfig.mini-chat-translator.option.secretKey": "Baidu Translate Secret Key",
   "text.autoconfig.mini-chat-translator.option.secretKey.@Tooltip": "Secret Key from Baidu Translate Open Platform",
+
   "text.autoconfig.mini-chat-translator.option.enabled": "Enable Translation",
   "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "Turn translation on/off",
+
   "text.autoconfig.mini-chat-translator.option.translateOwn": "Translate Own Messages",
-  "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "Whether to translate your own messages"
+  "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "Translate messages you receive",
+
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "Chinese to English",
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "Translate your Chinese messages to English before sending"
 }

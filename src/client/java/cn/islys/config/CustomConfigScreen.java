@@ -61,6 +61,15 @@ public class CustomConfigScreen {
                 .setSaveConsumer(config::setEnabled)
                 .build());
 
+        // 启用中文翻译成英文发送开关
+        mainCategory.addEntry(entryBuilder.startBooleanToggle(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish"),
+                        config.isChineseToEnglish()
+                ).setDefaultValue(true)
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip"))
+                .setSaveConsumer(config::setChineseToEnglish)
+                .build());
+
         // 翻译自己的消息开关
         mainCategory.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("text.autoconfig.mini-chat-translator.option.translateOwn"),

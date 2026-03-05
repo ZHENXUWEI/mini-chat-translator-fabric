@@ -17,33 +17,31 @@ public class Translator {
     private static final OkHttpClient CLIENT = new OkHttpClient();
 
     /**
-     * 同步翻译（会阻塞调用线程）
-     * @param text 要翻译的英文文本
-     * @return 翻译后的中文，如果失败则返回 null
+     * 翻译文本（自动检测源语言，翻译成目标语言）
+     * @param text 要翻译的文本
+     * @param from 源语言代码 (如 "en", "zh", "auto")
+     * @param to 目标语言代码
+     * @return 翻译后的文本，失败返回错误信息
      */
-    public static String translate(String text) {
+    public static String translate(String text, String from, String to) {
         ClothConfig config = ClothConfig.get();
         String appId = config.getAppId();
         String secretKey = config.getSecretKey();
 
         if (appId.isEmpty() || secretKey.isEmpty()) {
-            return "[请在 Mod Menu 中配置百度翻译 API 密钥]";
+            return "[请在配置中填写百度翻译 API 密钥]";
         }
 
-        // 生成随机数
         String salt = UUID.randomUUID().toString().substring(0, 8);
 
-        // 计算签名 sign = appId + text + salt + secretKey 的 MD5
-        // 在拼接前，将 text 明确转换为 UTF-8 字节数组
+        // 使用 UTF-8 字节数组计算签名
         String signStr = appId + text + salt + secretKey;
-        // 使用 getBytes 指定编码
         String sign = md5(signStr.getBytes(StandardCharsets.UTF_8));
 
-        // 构建请求
         RequestBody body = new FormBody.Builder()
                 .add("q", text)
-                .add("from", "en")      // 源语言：英文
-                .add("to", "zh")         // 目标语言：中文
+                .add("from", from)
+                .add("to", to)
                 .add("appid", appId)
                 .add("salt", salt)
                 .add("sign", sign)
@@ -62,14 +60,12 @@ public class Translator {
             String responseBody = response.body().string();
             JsonObject json = JsonParser.parseString(responseBody).getAsJsonObject();
 
-            // 检查是否有错误
             if (json.has("error_code")) {
                 String errorCode = json.get("error_code").getAsString();
                 String errorMsg = json.get("error_msg").getAsString();
                 return "[翻译错误: " + errorCode + " - " + errorMsg + "]";
             }
 
-            // 解析翻译结果
             if (json.has("trans_result")) {
                 var result = json.getAsJsonArray("trans_result").get(0).getAsJsonObject();
                 return result.get("dst").getAsString();
@@ -84,21 +80,37 @@ public class Translator {
     }
 
     /**
-     * 异步翻译 - 在新线程中执行，不会阻塞调用线程
-     * @param text 要翻译的文本
-     * @return CompletableFuture，完成后包含翻译结果
+     * 英译中（保留原方法）
      */
-    public static CompletableFuture<String> translateAsync(String text) {
-        return CompletableFuture.supplyAsync(() -> translate(text));
+    public static String translateEnToZh(String text) {
+        return translate(text, "en", "zh");
     }
 
     /**
-     * 计算 MD5
+     * 中译英（新方法）
      */
+    public static String translateZhToEn(String text) {
+        return translate(text, "zh", "en");
+    }
+
+    /**
+     * 异步英译中
+     */
+    public static CompletableFuture<String> translateEnToZhAsync(String text) {
+        return CompletableFuture.supplyAsync(() -> translateEnToZh(text));
+    }
+
+    /**
+     * 异步中译英
+     */
+    public static CompletableFuture<String> translateZhToEnAsync(String text) {
+        return CompletableFuture.supplyAsync(() -> translateZhToEn(text));
+    }
+
     private static String md5(byte[] input) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(input); // 直接对字节数组进行哈希
+            byte[] digest = md.digest(input);
             StringBuilder sb = new StringBuilder();
             for (byte b : digest) {
                 sb.append(String.format("%02x", b & 0xff));
