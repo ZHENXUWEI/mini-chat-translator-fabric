@@ -3,7 +3,7 @@
 	"id": "mini-chat-translator",
 	"version": "${version}",
 	"name": "Mini Chat Translator",
-	"description": "翻译聊天框里的英文消息！",
+	"description": "翻译聊天框里的英文消息以及将需要发送的内容翻译成英文后发送！",
 	"authors": [
 		"Real_SShwer"
 	],

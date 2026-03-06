@@ -7,13 +7,20 @@ import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 
 @Config(name = "mini-chat-translator")
 public class ClothConfig implements ConfigData {
-    private String appId = "";
-    private String secretKey = "";
+
+    // ========== 基础设置 ==========
     private boolean enabled = true;
+    private TranslationEngine translationEngine = TranslationEngine.LOCAL;
+    private boolean chineseToEnglish = true;
     private boolean translateOwn = true;
 
-    // 是否将中文翻译成英文发送
-    private boolean chineseToEnglish = true;
+    // ========== 百度翻译配置 ==========
+    private String baiduAppId = "";
+    private String baiduSecretKey = "";
+
+    // ========== 谷歌翻译配置 ==========
+    private String googleApiKey = "";  // 官方API密钥
+    // 免费版无需配置，直接可用
 
     public static void init() {
         AutoConfig.register(ClothConfig.class, Toml4jConfigSerializer::new);
@@ -23,19 +30,25 @@ public class ClothConfig implements ConfigData {
         return AutoConfig.getConfigHolder(ClothConfig.class).getConfig();
     }
 
-    // Getter 和 Setter
-    public String getAppId() { return appId; }
-    public void setAppId(String appId) { this.appId = appId; }
-
-    public String getSecretKey() { return secretKey; }
-    public void setSecretKey(String secretKey) { this.secretKey = secretKey; }
-
+    // ========== Getter/Setter ==========
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public TranslationEngine getTranslationEngine() { return translationEngine; }
+    public void setTranslationEngine(TranslationEngine engine) { this.translationEngine = engine; }
+
+    public boolean isChineseToEnglish() { return chineseToEnglish; }
+    public void setChineseToEnglish(boolean cte) { this.chineseToEnglish = cte; }
 
     public boolean isTranslateOwn() { return translateOwn; }
     public void setTranslateOwn(boolean translateOwn) { this.translateOwn = translateOwn; }
 
-    public boolean isChineseToEnglish() { return chineseToEnglish; }
-    public void setChineseToEnglish(boolean chineseToEnglish) { this.chineseToEnglish = chineseToEnglish; }
+    public String getBaiduAppId() { return baiduAppId; }
+    public void setBaiduAppId(String appId) { this.baiduAppId = appId; }
+
+    public String getBaiduSecretKey() { return baiduSecretKey; }
+    public void setBaiduSecretKey(String secretKey) { this.baiduSecretKey = secretKey; }
+
+    public String getGoogleApiKey() { return googleApiKey; }
+    public void setGoogleApiKey(String apiKey) { this.googleApiKey = apiKey; }
 }

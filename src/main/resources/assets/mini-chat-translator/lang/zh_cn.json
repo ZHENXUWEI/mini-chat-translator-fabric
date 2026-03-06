@@ -2,18 +2,24 @@
   "text.autoconfig.mini-chat-translator.title": "迷你聊天翻译配置",
   "text.autoconfig.mini-chat-translator.category.general": "通用设置",
 
-  "text.autoconfig.mini-chat-translator.option.appId": "百度翻译 APP ID",
-  "text.autoconfig.mini-chat-translator.option.appId.@Tooltip": "在百度翻译开放平台申请的 APP ID",
-
-  "text.autoconfig.mini-chat-translator.option.secretKey": "百度翻译密钥",
-  "text.autoconfig.mini-chat-translator.option.secretKey.@Tooltip": "在百度翻译开放平台申请的密钥",
-
   "text.autoconfig.mini-chat-translator.option.enabled": "启用翻译",
-  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "开启或关闭翻译功能",
+  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "开启或关闭所有翻译功能",
+
+  "text.autoconfig.mini-chat-translator.option.engine": "翻译引擎",
+  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "选择使用的翻译服务,在线翻译需要配置对应的API密钥",
+
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "中译英发送",
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "将你要发送的中文消息翻译成英文后发出",
 
   "text.autoconfig.mini-chat-translator.option.translateOwn": "翻译自己的消息",
   "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "是否翻译自己收到的消息",
 
-  "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "中译英发送",
-  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "将你要发送的中文翻译成英文后发出"
+  "text.autoconfig.mini-chat-translator.option.baiduAppId": "百度翻译 APP ID",
+  "text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip": "在百度翻译开放平台申请的 APP ID",
+
+  "text.autoconfig.mini-chat-translator.option.baiduSecretKey": "百度翻译密钥",
+  "text.autoconfig.mini-chat-translator.option.baiduSecretKey.@Tooltip": "在百度翻译开放平台申请的密钥",
+
+  "text.autoconfig.mini-chat-translator.option.googleApiKey": "谷歌官方 API 密钥",
+  "text.autoconfig.mini-chat-translator.option.googleApiKey.@Tooltip": "从 Google Cloud 控制台获取的 API 密钥"
 }
