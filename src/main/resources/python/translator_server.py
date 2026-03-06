@@ -17,8 +17,14 @@ import threading
 import time
 
 if sys.platform == 'win32':
+    import locale
+    # 设置控制台编码为 UTF-8
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
+    # 确保文件系统路径使用 Unicode
+    import _winapi
+    # 强制使用 Unicode API
+    os.environ['PYTHONUTF8'] = '1'
 
 # 添加 site-packages 到系统路径
 script_dir = Path(__file__).parent
@@ -119,21 +125,22 @@ class Translator:
         """加载模型，如果不存在则下载"""
         import os
 
-        # 将 Path 对象转换为字符串，并确保使用原始字符串
+        # 获取绝对路径并规范化
         model_path_str = str(self.model_path.absolute())
         print(f"检查模型文件: {model_path_str}")
 
-        # 检查模型文件是否存在
+        # 列出目录下所有文件，确认文件存在
+        print("模型目录中的文件:")
+        try:
+            for file in self.model_path.iterdir():
+                print(f"  - {file.name} (大小: {file.stat().st_size} 字节)")
+        except Exception as e:
+            print(f"无法列出目录: {e}")
+
+        # 检查关键文件
+        sp_model_file = self.model_path / 'sentencepiece.bpe.model'
         model_file = self.model_path / 'pytorch_model.bin'
         tokenizer_file = self.model_path / 'tokenizer_config.json'
-        sp_model_file = self.model_path / 'sentencepiece.bpe.model'
-
-        if not model_file.exists():
-            print(f"模型文件不存在: {model_file}")
-        if not tokenizer_file.exists():
-            print(f"分词器配置文件不存在: {tokenizer_file}")
-        if not sp_model_file.exists():
-            print(f"SentencePiece模型不存在: {sp_model_file}")
 
         if not model_file.exists() or not tokenizer_file.exists() or not sp_model_file.exists():
             print("模型文件不完整，开始下载...")
@@ -143,10 +150,31 @@ class Translator:
 
         print("正在加载模型到内存...")
         try:
-            # 使用原始字符串格式加载
-            self.tokenizer = M2M100Tokenizer.from_pretrained(model_path_str)
+            # 关键修复：使用原始字符串并显式指定文件路径
+            model_path_abs = os.path.abspath(str(self.model_path))
+            # 将反斜杠替换为正斜杠
+            model_path_abs = model_path_abs.replace('\\', '/')
+
+            # 使用原始字符串（r''）来避免转义问题
+            model_path_raw = r'{}'.format(model_path_abs)
+            print(f"加载模型的原始路径: {model_path_raw}")
+
+            # 尝试两种加载方式
+            try:
+                # 方式1：直接加载目录
+                self.tokenizer = M2M100Tokenizer.from_pretrained(model_path_raw)
+            except Exception as e:
+                print(f"方式1失败: {e}")
+                # 方式2：指定具体文件
+                self.tokenizer = M2M100Tokenizer.from_pretrained(
+                    model_path_raw,
+                    vocab_file=str(self.model_path / 'vocab.json'),
+                    tokenizer_file=str(self.model_path / 'tokenizer_config.json'),
+                    spm_file=str(self.model_path / 'sentencepiece.bpe.model')
+                )
+
             self.model = M2M100ForConditionalGeneration.from_pretrained(
-                model_path_str,
+                model_path_raw,
                 torch_dtype=torch.float16 if self.device.type == 'cuda' else torch.float32
             ).to(self.device)
             self.model.eval()

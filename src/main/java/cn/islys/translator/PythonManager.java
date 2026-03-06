@@ -325,24 +325,40 @@ public class PythonManager {
                 }
                 LOGGER.info("启动 Python 翻译服务器...");
 
+                // 创建无中文的临时模型路径
+                Path tempModelDir = Paths.get(System.getProperty("java.io.tmpdir"), "minecraft_translator_models");
+                if (!Files.exists(tempModelDir)) {
+                    Files.createDirectories(tempModelDir);
+                    // 复制模型文件到临时目录
+                    Files.walk(MODEL_DIR).forEach(source -> {
+                        try {
+                            Path dest = tempModelDir.resolve(MODEL_DIR.relativize(source));
+                            if (Files.isDirectory(source)) {
+                                Files.createDirectories(dest);
+                            } else {
+                                Files.copy(source, dest, StandardCopyOption.REPLACE_EXISTING);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("复制文件失败: {}", e.getMessage());
+                        }
+                    });
+                    LOGGER.info("模型文件已复制到临时目录: {}", tempModelDir);
+                }
+
                 ProcessBuilder pb = new ProcessBuilder(
                         pythonExecutable.toString(),
-                        PYTHON_DIR.resolve("translator_server.py").toString()
-                        // 注意：不要传递 --model-path 参数，因为手动测试时没传也能正常工作
+                        PYTHON_DIR.resolve("translator_server.py").toString(),
+                        "--model-path", tempModelDir.toString()  // 传递临时路径
                 );
+
                 pb.environment().put("PYTHONPATH", PYTHON_DIR.resolve("Lib/site-packages").toString());
                 pb.environment().put("PYTHONIOENCODING", "utf-8");
                 pb.environment().put("PYTHONUTF8", "1");
-                pb.environment().put("PYTHONUNBUFFERED", "1");  // 新增：禁用输出缓冲
+                pb.environment().put("PYTHONUNBUFFERED", "1");
+                pb.environment().put("PYTHONLEGACYWINDOWSFSENCODING", "0");
                 pb.directory(PYTHON_DIR.toFile());
 
-                // 合并错误流到标准输出
                 pb.redirectErrorStream(true);
-
-                // 设置环境变量，确保 Python 输出使用 UTF-8
-                pb.environment().put("PYTHONIOENCODING", "utf-8");
-                pb.environment().put("PYTHONUTF8", "1");
-
 
                 LOGGER.info("执行命令: {}", String.join(" ", pb.command()));
 
