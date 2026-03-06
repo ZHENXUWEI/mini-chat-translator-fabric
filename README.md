@@ -6,7 +6,7 @@
 
 ## ---使用说明---
 1下载前置模组:模组菜单Mod Menu
-2.在模组菜单中配置百度翻译的ID和秘钥
+2.在模组菜单中使用本地翻译或配置秘钥
 
 ## ---目前支持的游戏版本和模组加载器---
 ### Java Edition (1.21.8，1.21.11) + Fabric
@@ -23,7 +23,7 @@
 2. Translate the Chinese text to be sent into English and send it
 ##   ---Instructions---
 1. Download the prerequisite module: Mod Menu
-2. Configure the ID and secret key of Baidu Translation in the Mod Menu
+2. Use local translation or configuration key in the module menu
 
 ## ---Currently supported game versions and mod loaders---
 
