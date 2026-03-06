@@ -1,92 +1,145 @@
 package cn.islys.config;
 
+import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 
 public class CustomConfigScreen {
 
     public static Screen create(Screen parent) {
-        // 1. 获取当前的配置实例
         ClothConfig config = ClothConfig.get();
 
-        // 2. 创建构建器
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
                 .setTitle(Text.translatable("text.autoconfig.mini-chat-translator.title"));
 
-        // 3. 获取条目构建器
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
-        // 4. 创建配置分类（这里我们只用一个主分类）
-        ConfigCategory mainCategory = builder.getOrCreateCategory(Text.translatable("text.autoconfig.mini-chat-translator.category.general"));
+        // 主分类
+        ConfigCategory mainCategory = builder.getOrCreateCategory(
+                Text.translatable("text.autoconfig.mini-chat-translator.category.general"));
 
-        // 5. 开始添加自定义条目，彻底告别 @PrefixText
+        // ===== 基础设置 =====
+        mainCategory.addEntry(entryBuilder.startTextDescription(
+                Text.literal("§6§l⚙️ 基础设置")).build());
 
-        // API 设置分类 (可以用条目本身作为视觉分隔)
-        mainCategory.addEntry(entryBuilder.startTextDescription(Text.literal("§6§l百度翻译 API 设置")).build());
-
-        // APP ID 输入框
-        mainCategory.addEntry(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.appId"),
-                        config.getAppId()
-                ).setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.appId.@Tooltip"))
-                .setSaveConsumer(config::setAppId)
-                .build());
-
-        // 密钥输入框 (这里我们用密码框)
-        mainCategory.addEntry(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.secretKey"),
-                        config.getSecretKey()
-                ).setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.secretKey.@Tooltip"))
-                .setSaveConsumer(config::setSecretKey)
-                .build());
-
-        // 添加一个空白行作为分隔
-        mainCategory.addEntry(entryBuilder.startTextDescription(Text.literal("")).build());
-
-        // 功能设置分类
-        mainCategory.addEntry(entryBuilder.startTextDescription(Text.literal("§6§l功能设置")).build());
-
-        // 启用翻译开关
+        // 总开关
         mainCategory.addEntry(entryBuilder.startBooleanToggle(
                         Text.translatable("text.autoconfig.mini-chat-translator.option.enabled"),
-                        config.isEnabled()
-                ).setDefaultValue(true)
+                        config.isEnabled())
+                .setDefaultValue(true)
                 .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.enabled.@Tooltip"))
                 .setSaveConsumer(config::setEnabled)
                 .build());
 
-        // 启用中文翻译成英文发送开关
-        mainCategory.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish"),
-                        config.isChineseToEnglish()
-                ).setDefaultValue(true)
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip"))
-                .setSaveConsumer(config::setChineseToEnglish)
+        // 翻译引擎选择（下拉框）
+        mainCategory.addEntry(entryBuilder.startEnumSelector(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.engine"),
+                        TranslationEngine.class,
+                        config.getTranslationEngine())
+                .setDefaultValue(TranslationEngine.BAIDU)
+                .setEnumNameProvider(anEnum -> {
+                    if (anEnum instanceof TranslationEngine) {
+                        return Text.literal(((TranslationEngine) anEnum).getDisplayName());
+                    }
+                    return Text.literal(anEnum.toString());
+                })
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.engine.@Tooltip"))
+                .setSaveConsumer(config::setTranslationEngine)
                 .build());
 
-        // 翻译自己的消息开关
-        mainCategory.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.translateOwn"),
-                        config.isTranslateOwn()
-                ).setDefaultValue(true)
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip"))
-                .setSaveConsumer(config::setTranslateOwn)
+        // 添加分隔线
+        mainCategory.addEntry(entryBuilder.startTextDescription(Text.literal("")).build());
+
+        // ===== 百度翻译配置 =====
+        SubCategoryBuilder baiduSub = entryBuilder.startSubCategory(
+                Text.literal("§6§l🌐 百度翻译配置"));
+
+        baiduSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.baiduAppId"),
+                        config.getBaiduAppId())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip"))
+                .setSaveConsumer(config::setBaiduAppId)
                 .build());
 
-        // 6. 设置保存回调
+        baiduSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.baiduSecretKey"),
+                        config.getBaiduSecretKey())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.baiduSecretKey.@Tooltip"))
+                .setSaveConsumer(config::setBaiduSecretKey)
+                .build());
+
+        mainCategory.addEntry(baiduSub.build());
+
+        // ===== 腾讯混元配置 =====
+        SubCategoryBuilder tencentSub = entryBuilder.startSubCategory(
+                Text.literal("§6§l☁️ 腾讯混元配置"));
+
+        tencentSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretId"),
+                        config.getTencentSecretId())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretId.@Tooltip"))
+                .setSaveConsumer(config::setTencentSecretId)
+                .build());
+
+        tencentSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretKey"),
+                        config.getTencentSecretKey())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretKey.@Tooltip"))
+                .setSaveConsumer(config::setTencentSecretKey)
+                .build());
+
+        mainCategory.addEntry(tencentSub.build());
+
+        // ===== 阿里通义配置 =====
+        SubCategoryBuilder aliyunSub = entryBuilder.startSubCategory(
+                Text.literal("§6§l🌀 阿里通义配置"));
+
+        aliyunSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.aliyunApiKey"),
+                        config.getAliyunApiKey())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip"))
+                .setSaveConsumer(config::setAliyunApiKey)
+                .build());
+
+        mainCategory.addEntry(aliyunSub.build());
+
+        // ===== 本地模型配置 =====
+        SubCategoryBuilder localSub = entryBuilder.startSubCategory(
+                Text.literal("§6§l💻 本地模型配置"));
+
+        localSub.add(entryBuilder.startBooleanToggle(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.autoDownloadModel"),
+                        config.isAutoDownloadModel())
+                .setDefaultValue(true)
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.autoDownloadModel.@Tooltip"))
+                .setSaveConsumer(config::setAutoDownloadModel)
+                .build());
+
+        localSub.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.localModelPath"),
+                        config.getLocalModelPath())
+                .setDefaultValue("")
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.localModelPath.@Tooltip"))
+                .setSaveConsumer(config::setLocalModelPath)
+                .build());
+
+        mainCategory.addEntry(localSub.build());
+
+        // 设置保存回调
         builder.setSavingRunnable(() -> {
-            // Cloth Config 会自动调用上面设置的 saveConsumer 来更新 config 对象
-            // 但我们需要手动保存到文件
-            me.shedaniel.autoconfig.AutoConfig.getConfigHolder(ClothConfig.class).save();
+            AutoConfig.getConfigHolder(ClothConfig.class).save();
         });
 
-        // 7. 返回构建好的屏幕
         return builder.build();
     }
 }

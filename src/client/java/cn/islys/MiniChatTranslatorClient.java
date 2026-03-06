@@ -1,7 +1,9 @@
 package cn.islys;
 
-// import cn.islys.config.ModConfig;
 import cn.islys.config.ClothConfig;
+import cn.islys.config.TranslationEngine;
+import cn.islys.translator.PythonManager;
+import cn.islys.translator.TranslationServer;
 import cn.islys.util.Translator;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -10,69 +12,91 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.regex.Pattern;
+
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MiniChatTranslatorClient implements ClientModInitializer {
     public static final String MOD_ID = "mini-chat-translator";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    // 新增：标记位，防止递归
     private static boolean isSendingTranslated = false;
-
-    // 新增：预编译正则表达式，提高性能
     private static final Pattern CHAT_MESSAGE_PATTERN = Pattern.compile(
             "(?:\\[.*?\\]\\s*)*?(?:<.*?>\\s*)?([a-zA-Z0-9_]+)?:\\s+(.*)$"
     );
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("聊天翻译模组已加载！");
         ClothConfig.init();
+        LOGGER.info("聊天翻译模组已加载！");
 
         ClothConfig config = ClothConfig.get();
-        LOGGER.info("初始配置 - enabled: {}, translateOwn: {}, chineseToEnglish: {}",
-                config.isEnabled(), config.isTranslateOwn(), config.isChineseToEnglish());
+        LOGGER.info("初始配置 - 翻译引擎: {}, 自动下载模型: {}",
+                config.getTranslationEngine(), config.isAutoDownloadModel());
 
-        // 1. 监听收到的系统消息（ALLOW_GAME）
+        // 如果启用本地翻译，初始化 Python 环境
+        if (config.getTranslationEngine() == TranslationEngine.LOCAL && config.isAutoDownloadModel()) {
+            initializeLocalTranslator();
+        }
+
+        setupMessageListeners();
+    }
+
+    private void initializeLocalTranslator() {
+        LOGGER.info("开始初始化本地翻译...");
+
+        PythonManager.initialize().thenAccept(success -> {
+            if (success) {
+                LOGGER.info("Python环境初始化成功，启动服务器...");
+                PythonManager.startServer().thenAccept(port -> {
+                    if (port > 0) {
+                        TranslationServer.setPort(port);
+                        LOGGER.info("✅ 本地翻译服务器已启动，端口: {}", port);
+
+                        MinecraftClient.getInstance().execute(() -> {
+                            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                                    Text.literal("§a[翻译] 本地翻译服务器已就绪")
+                            );
+                        });
+                    } else {
+                        LOGGER.error("❌ 服务器启动失败");
+                    }
+                });
+            } else {
+                LOGGER.error("❌ Python环境初始化失败");
+                MinecraftClient.getInstance().execute(() -> {
+                    MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                            Text.literal("§c[翻译] 本地翻译初始化失败，请查看日志")
+                    );
+                });
+            }
+        });
+    }
+
+    private void setupMessageListeners() {
+        // 系统消息
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
-            LOGGER.info("========== ALLOW_GAME 事件触发（系统消息） ==========");
-            LOGGER.info("消息内容: {}", message.getString());
-            LOGGER.info("消息类: {}", message.getClass().getName());
-
-            ClothConfig config2 = ClothConfig.get();
-            if (config2.isEnabled()) {
+            if (ClothConfig.get().isEnabled()) {
                 processReceivedMessage(message, "GAME");
             }
             return true;
         });
 
-        // 2. 监听收到的玩家消息（ALLOW_CHAT）
+        // 玩家消息
         ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
-            LOGGER.info("========== ALLOW_CHAT 事件触发（收到玩家消息） ==========");
-            LOGGER.info("消息内容: {}", message.getString());
-            LOGGER.info("发送者: {}", sender);
-
-            ClothConfig config2 = ClothConfig.get();
-            if (config2.isEnabled()) {
+            if (ClothConfig.get().isEnabled()) {
                 processReceivedMessage(message, "CHAT");
             }
             return true;
         });
 
-        // 3. 监听自己发送的消息（中译英）
+        // 发送消息
         ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
-            LOGGER.info("========== ALLOW_CHAT 事件触发（发送消息） ==========");
-            LOGGER.info("原始消息: {}", message);
+            if (isSendingTranslated) return true;
 
-            if (isSendingTranslated) {
-                LOGGER.info("是翻译后的消息，直接放行");
-                return true;
-            }
-
-            ClothConfig config3 = ClothConfig.get();
-            if (config3.isEnabled() && config3.isChineseToEnglish()) {
-                LOGGER.info("开始处理发送消息");
+            ClothConfig config = ClothConfig.get();
+            if (config.isEnabled() && config.isChineseToEnglish()) {
                 processSendingMessage(message);
                 return false;
             }
@@ -80,82 +104,67 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
         });
     }
 
-    /**
-     * 处理收到的消息（英译中）
-     * @param message 收到的消息
-     * @param source 消息来源 ("GAME" 或 "CHAT")
-     */
     private void processReceivedMessage(Text message, String source) {
-        LOGGER.info(">>> processReceivedMessage 被调用！来源: {}", source);
         String originalText = message.getString();
-        LOGGER.info("收到原始消息: {}", originalText);
-
-        ClothConfig config = ClothConfig.get();
-        LOGGER.info("翻译开关: {}, 英译中配置: {}", config.isEnabled(), config.isTranslateOwn());
-
-        // 1. 先检查总开关
-        if (!config.isEnabled()) {
-            LOGGER.info("翻译功能已关闭");
-            return;
-        }
-
-        // 2. 检查是否启用收到的消息翻译
-        if (!config.isTranslateOwn()) {
-            LOGGER.info("收到的消息翻译已关闭");
-            return;
-        }
-
-        // 3. 尝试提取纯消息内容
         String cleanMessage = extractChatMessage(originalText);
-        LOGGER.info("提取后的消息: {}", cleanMessage);
 
-        // 4. 检查提取后的消息是否包含中文
-        if (containsChinese(cleanMessage)) {
-            LOGGER.info("消息包含中文，不翻译");
+        if (!ClothConfig.get().isTranslateOwn() || containsChinese(cleanMessage)) {
             return;
         }
 
-        LOGGER.info("开始翻译: {}", cleanMessage);
-        Translator.translateEnToZhAsync(cleanMessage).thenAcceptAsync(translatedText -> {
-            if (isTranslationValid(cleanMessage, translatedText)) {
-                MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                        Text.literal("§7[英→中] " + translatedText)
-                );
-                LOGGER.info("翻译完成: {}", translatedText);
-            } else {
-                LOGGER.warn("翻译结果无效: {}", translatedText);
-            }
-        }, MinecraftClient.getInstance()::execute).exceptionally(throwable -> {
-            LOGGER.error("翻译异常", throwable);
-            return null;
-        });
+        translateAsync(cleanMessage, "auto", "zh")
+                .thenAcceptAsync(translatedText -> {
+                    if (isTranslationValid(cleanMessage, translatedText)) {
+                        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                                Text.literal("§7[翻译] " + translatedText)
+                        );
+                    }
+                }, MinecraftClient.getInstance()::execute);
     }
 
-    /**
-     * 处理发送的消息（中译英）
-     */
     private void processSendingMessage(String message) {
         if (!containsChinese(message)) {
             sendTranslatedMessage(message);
             return;
         }
 
-        Translator.translateZhToEnAsync(message).thenAcceptAsync(translatedText -> {
-            if (isTranslationValid(message, translatedText)) {
-                sendTranslatedMessage(translatedText);
-
-                MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                        Text.literal("§7[中→英] " + translatedText)
-                );
-            } else {
-                sendTranslatedMessage(message);
-            }
-        }, MinecraftClient.getInstance()::execute);
+        translateAsync(message, "zh", "en")
+                .thenAcceptAsync(translatedText -> {
+                    if (isTranslationValid(message, translatedText)) {
+                        sendTranslatedMessage(translatedText);
+                        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                                Text.literal("§7[中→英] " + translatedText)
+                        );
+                    } else {
+                        sendTranslatedMessage(message);
+                    }
+                }, MinecraftClient.getInstance()::execute);
     }
 
-    /**
-     * 新增：专门用于发送翻译后的消息
-     */
+    private CompletableFuture<String> translateAsync(String text, String from, String to) {
+        ClothConfig config = ClothConfig.get();
+
+        // 根据选择的翻译引擎决定使用哪个翻译服务
+        switch (config.getTranslationEngine()) {
+            case LOCAL:
+                if (PythonManager.isServerRunning()) {
+                    return TranslationServer.translate(text, from, to);
+                } else {
+                    LOGGER.warn("本地翻译服务器未运行，回退到百度翻译");
+                    return Translator.translateAsync(text, from, to);
+                }
+            case TENCENT:
+                // TODO: 实现腾讯翻译
+                return CompletableFuture.completedFuture("[腾讯翻译开发中]");
+            case ALIYUN:
+                // TODO: 实现阿里翻译
+                return CompletableFuture.completedFuture("[阿里翻译开发中]");
+            case BAIDU:
+            default:
+                return Translator.translateAsync(text, from, to);
+        }
+    }
+
     private void sendTranslatedMessage(String message) {
         isSendingTranslated = true;
         try {
@@ -167,37 +176,24 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
         }
     }
 
-    /**
-     * 新增：从服务器格式化消息中提取纯聊天内容
-     * 格式示例: [Italy|Calvi] Koyaan: u got played
-     * 或: [NC] [Ghana] 练习近身平砍 anyuanqwq: zen me le
-     */
     private String extractChatMessage(String formattedMessage) {
         Matcher matcher = CHAT_MESSAGE_PATTERN.matcher(formattedMessage);
-
         if (matcher.find()) {
-            // group(2) 是冒号后面的消息内容
             String extracted = matcher.group(2);
             if (extracted != null && !extracted.isEmpty()) {
                 return extracted.trim();
             }
         }
-
-        // 备用方案：如果正则匹配失败，尝试找最后一个冒号
         int colonIndex = formattedMessage.lastIndexOf(": ");
         if (colonIndex != -1 && colonIndex < formattedMessage.length() - 2) {
             return formattedMessage.substring(colonIndex + 2).trim();
         }
-
-        // 如果都失败，返回原消息
-        LOGGER.warn("消息提取失败，使用原消息: {}", formattedMessage);
         return formattedMessage;
     }
 
     private boolean containsChinese(String str) {
         for (char c : str.toCharArray()) {
-            Character.UnicodeScript sc = Character.UnicodeScript.of(c);
-            if (sc == Character.UnicodeScript.HAN) {
+            if (Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN) {
                 return true;
             }
         }
@@ -208,7 +204,6 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
         if (translated == null || translated.isEmpty()) return false;
         if (translated.contains("DaSheepa") || translated.equals("达西帕")) return false;
         if (translated.equals(original)) return false;
-        if (translated.matches("[\\p{Punct}\\d\\s]+")) return false;
-        return true;
+        return !translated.matches("[\\p{Punct}\\d\\s]+");
     }
 }

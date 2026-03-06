@@ -2,11 +2,29 @@
   "text.autoconfig.mini-chat-translator.title": "迷你聊天翻译配置",
   "text.autoconfig.mini-chat-translator.category.general": "通用设置",
 
-  "text.autoconfig.mini-chat-translator.option.appId": "百度翻译 APP ID",
-  "text.autoconfig.mini-chat-translator.option.appId.@Tooltip": "在百度翻译开放平台申请的 APP ID",
+  "text.autoconfig.mini-chat-translator.option.engine": "翻译引擎",
+  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "选择使用的翻译服务",
 
-  "text.autoconfig.mini-chat-translator.option.secretKey": "百度翻译密钥",
-  "text.autoconfig.mini-chat-translator.option.secretKey.@Tooltip": "在百度翻译开放平台申请的密钥",
+  "text.autoconfig.mini-chat-translator.option.baiduAppId": "百度翻译 APP ID",
+  "text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip": "在百度翻译开放平台申请的 APP ID",
+
+  "text.autoconfig.mini-chat-translator.option.baiduSecretKey": "百度翻译密钥",
+  "text.autoconfig.mini-chat-translator.option.baiduSecretKey.@Tooltip": "在百度翻译开放平台申请的密钥",
+
+  "text.autoconfig.mini-chat-translator.option.tencentSecretId": "腾讯云 Secret ID",
+  "text.autoconfig.mini-chat-translator.option.tencentSecretId.@Tooltip": "在腾讯云控制台获取的 Secret ID",
+
+  "text.autoconfig.mini-chat-translator.option.tencentSecretKey": "腾讯云 Secret Key",
+  "text.autoconfig.mini-chat-translator.option.tencentSecretKey.@Tooltip": "在腾讯云控制台获取的 Secret Key",
+
+  "text.autoconfig.mini-chat-translator.option.aliyunApiKey": "阿里云 API Key",
+  "text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip": "在阿里云控制台获取的 API Key",
+
+  "text.autoconfig.mini-chat-translator.option.autoDownloadModel": "自动下载模型",
+  "text.autoconfig.mini-chat-translator.option.autoDownloadModel.@Tooltip": "首次使用时自动下载翻译模型（约470MB）",
+
+  "text.autoconfig.mini-chat-translator.option.localModelPath": "模型路径",
+  "text.autoconfig.mini-chat-translator.option.localModelPath.@Tooltip": "自定义模型存放路径（留空则使用默认路径）",
 
   "text.autoconfig.mini-chat-translator.option.enabled": "启用翻译",
   "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "开启或关闭翻译功能",
