@@ -13,6 +13,8 @@ import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,11 +34,11 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
         LOGGER.info("聊天翻译模组已加载！");
 
         ClothConfig config = ClothConfig.get();
-        LOGGER.info("初始配置 - 翻译引擎: {}, 自动下载模型: {}",
-                config.getTranslationEngine(), config.isAutoDownloadModel());
+        LOGGER.info("初始配置 - 翻译引擎: {}",
+                config.getTranslationEngine());
 
         // 如果启用本地翻译，初始化 Python 环境
-        if (config.getTranslationEngine() == TranslationEngine.LOCAL && config.isAutoDownloadModel()) {
+        if (config.getTranslationEngine() == TranslationEngine.LOCAL) {
             initializeLocalTranslator();
         }
 
@@ -44,11 +46,24 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
     }
 
     private void initializeLocalTranslator() {
-        LOGGER.info("开始初始化本地翻译...");
+        // 发送首次使用提示
+        MinecraftClient.getInstance().execute(() -> {
+            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                    Text.literal("§e[翻译] 如果第一次使用本地翻译，需要下载模型文件")
+            );
+//            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+//                    Text.literal("§e[翻译] 下载时间取决于您的网速，通常需要5-10分钟")
+//            );
+            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                    Text.literal("§e[翻译] 下载期间您可以继续游戏，模型加载完成后会自动启用")
+            );
+            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
+                    Text.literal("§4[翻译] 请耐心等待本地翻译模型启动")
+            );
+        });
 
         PythonManager.initialize().thenAccept(success -> {
             if (success) {
-                LOGGER.info("Python环境初始化成功，启动服务器...");
                 PythonManager.startServer().thenAccept(port -> {
                     if (port > 0) {
                         TranslationServer.setPort(port);
@@ -59,8 +74,6 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
                                     Text.literal("§a[翻译] 本地翻译服务器已就绪")
                             );
                         });
-                    } else {
-                        LOGGER.error("❌ 服务器启动失败");
                     }
                 });
             } else {

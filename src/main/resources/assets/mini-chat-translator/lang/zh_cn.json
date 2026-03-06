@@ -2,8 +2,17 @@
   "text.autoconfig.mini-chat-translator.title": "迷你聊天翻译配置",
   "text.autoconfig.mini-chat-translator.category.general": "通用设置",
 
+  "text.autoconfig.mini-chat-translator.option.enabled": "启用翻译",
+  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "开启或关闭所有翻译功能",
+
   "text.autoconfig.mini-chat-translator.option.engine": "翻译引擎",
-  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "选择使用的翻译服务",
+  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "选择使用的翻译服务,在线翻译需要配置对应的API密钥",
+
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "中译英发送",
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "将你要发送的中文消息翻译成英文后发出",
+
+  "text.autoconfig.mini-chat-translator.option.translateOwn": "翻译自己的消息",
+  "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "是否翻译自己收到的消息",
 
   "text.autoconfig.mini-chat-translator.option.baiduAppId": "百度翻译 APP ID",
   "text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip": "在百度翻译开放平台申请的 APP ID",
@@ -18,20 +27,5 @@
   "text.autoconfig.mini-chat-translator.option.tencentSecretKey.@Tooltip": "在腾讯云控制台获取的 Secret Key",
 
   "text.autoconfig.mini-chat-translator.option.aliyunApiKey": "阿里云 API Key",
-  "text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip": "在阿里云控制台获取的 API Key",
-
-  "text.autoconfig.mini-chat-translator.option.autoDownloadModel": "自动下载模型",
-  "text.autoconfig.mini-chat-translator.option.autoDownloadModel.@Tooltip": "首次使用时自动下载翻译模型（约470MB）",
-
-  "text.autoconfig.mini-chat-translator.option.localModelPath": "模型路径",
-  "text.autoconfig.mini-chat-translator.option.localModelPath.@Tooltip": "自定义模型存放路径（留空则使用默认路径）",
-
-  "text.autoconfig.mini-chat-translator.option.enabled": "启用翻译",
-  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "开启或关闭翻译功能",
-
-  "text.autoconfig.mini-chat-translator.option.translateOwn": "翻译自己的消息",
-  "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "是否翻译自己收到的消息",
-
-  "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "中译英发送",
-  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "将你要发送的中文翻译成英文后发出"
+  "text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip": "在阿里云控制台获取的 API Key"
 }

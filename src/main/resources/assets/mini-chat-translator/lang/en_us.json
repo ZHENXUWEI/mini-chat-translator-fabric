@@ -3,7 +3,7 @@
   "text.autoconfig.mini-chat-translator.category.general": "General Settings",
 
   "text.autoconfig.mini-chat-translator.option.engine": "Translation Engine",
-  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "Select the translation service to use",
+  "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "Choose the translation service to use\\n§aLocal Model§r: Fully offline, requiring a 1.94GB model download for first use\\n§eOnline Translation§r: Requires configuration of the corresponding API key",
 
   "text.autoconfig.mini-chat-translator.option.baiduAppId": "Baidu Translation APP ID",
   "text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip": "The APP ID applied for on the Baidu Translation Open Platform",

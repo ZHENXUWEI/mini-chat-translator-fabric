@@ -8,42 +8,56 @@ import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 
 @Config(name = "mini-chat-translator")
 public class ClothConfig implements ConfigData {
-    // 新增：翻译引擎选择
-    private TranslationEngine translationEngine = TranslationEngine.BAIDU;
 
-    // 百度翻译配置
+    // ========== 基础设置 ==========
     @ConfigEntry.Gui.Tooltip
     @ConfigEntry.Gui.PrefixText
-    private String baiduAppId = "";
-
-    @ConfigEntry.Gui.Tooltip
-    private String baiduSecretKey = "";
-
-    // 腾讯混元配置
-    @ConfigEntry.Gui.Tooltip
-    @ConfigEntry.Gui.PrefixText
-    private String tencentSecretId = "";
-
-    @ConfigEntry.Gui.Tooltip
-    private String tencentSecretKey = "";
-
-    // 阿里通义配置
-    @ConfigEntry.Gui.Tooltip
-    @ConfigEntry.Gui.PrefixText
-    private String aliyunApiKey = "";
-
-    // 本地模型配置
-    @ConfigEntry.Gui.Tooltip
-    @ConfigEntry.Gui.PrefixText
-    private boolean autoDownloadModel = true;  // 首次启动自动下载
-
-    @ConfigEntry.Gui.Tooltip
-    private String localModelPath = "";  // 可自定义模型路径
-
-    // 原有功能开关
     private boolean enabled = true;
-    private boolean translateOwn = true;
+
+    @ConfigEntry.Gui.Tooltip
+    private TranslationEngine translationEngine = TranslationEngine.LOCAL;
+
+    @ConfigEntry.Gui.Tooltip
     private boolean chineseToEnglish = true;
+
+    @ConfigEntry.Gui.Tooltip
+    private boolean translateOwn = true;
+
+    // ========== 百度翻译配置（仅在选择百度时显示）==========
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.Gui.CollapsibleObject
+    private BaiduConfig baidu = new BaiduConfig();
+
+    // ========== 腾讯翻译配置（仅在选择腾讯时显示）==========
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.Gui.CollapsibleObject
+    private TencentConfig tencent = new TencentConfig();
+
+    // ========== 阿里翻译配置（仅在选择阿里时显示）==========
+    @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.Gui.CollapsibleObject
+    private AliyunConfig aliyun = new AliyunConfig();
+
+    public static class BaiduConfig {
+        @ConfigEntry.Gui.Tooltip
+        public String appId = "";
+
+        @ConfigEntry.Gui.Tooltip
+        public String secretKey = "";
+    }
+
+    public static class TencentConfig {
+        @ConfigEntry.Gui.Tooltip
+        public String secretId = "";
+
+        @ConfigEntry.Gui.Tooltip
+        public String secretKey = "";
+    }
+
+    public static class AliyunConfig {
+        @ConfigEntry.Gui.Tooltip
+        public String apiKey = "";
+    }
 
     public static void init() {
         AutoConfig.register(ClothConfig.class, Toml4jConfigSerializer::new);
@@ -53,16 +67,45 @@ public class ClothConfig implements ConfigData {
         return AutoConfig.getConfigHolder(ClothConfig.class).getConfig();
     }
 
+    // Getter 和 Setter
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public TranslationEngine getTranslationEngine() { return translationEngine; }
+    public void setTranslationEngine(TranslationEngine engine) { this.translationEngine = engine; }
+
+    public boolean isChineseToEnglish() { return chineseToEnglish; }
+    public void setChineseToEnglish(boolean cte) { this.chineseToEnglish = cte; }
+
+    public boolean isTranslateOwn() { return translateOwn; }
+    public void setTranslateOwn(boolean translateOwn) { this.translateOwn = translateOwn; }
+
+    // 百度配置
+    public String getBaiduAppId() { return baidu.appId; }
+    public void setBaiduAppId(String appId) { this.baidu.appId = appId; }
+
+    public String getBaiduSecretKey() { return baidu.secretKey; }
+    public void setBaiduSecretKey(String secretKey) { this.baidu.secretKey = secretKey; }
+
+    // 腾讯配置
+    public String getTencentSecretId() { return tencent.secretId; }
+    public void setTencentSecretId(String secretId) { this.tencent.secretId = secretId; }
+
+    public String getTencentSecretKey() { return tencent.secretKey; }
+    public void setTencentSecretKey(String secretKey) { this.tencent.secretKey = secretKey; }
+
+    // 阿里配置
+    public String getAliyunApiKey() { return aliyun.apiKey; }
+    public void setAliyunApiKey(String apiKey) { this.aliyun.apiKey = apiKey; }
+
     /**
      * 获取当前选中的翻译引擎对应的 APP ID
-     * 根据 translationEngine 返回对应的 ID
      */
     public String getAppId() {
         return switch (translationEngine) {
-            case BAIDU -> baiduAppId;
-            case TENCENT -> tencentSecretId;  // 腾讯用的是 SecretId
-            case ALIYUN -> aliyunApiKey;     // 阿里用的是 API Key
-            case LOCAL -> "";                // 本地模型不需要
+            case BAIDU -> baidu.appId;
+            case TENCENT -> tencent.secretId;
+            case ALIYUN -> aliyun.apiKey;
             default -> "";
         };
     }
@@ -72,45 +115,10 @@ public class ClothConfig implements ConfigData {
      */
     public String getSecretKey() {
         return switch (translationEngine) {
-            case BAIDU -> baiduSecretKey;
-            case TENCENT -> tencentSecretKey;
-            case ALIYUN -> aliyunApiKey;      // 阿里只有 API Key
-            case LOCAL -> "";
+            case BAIDU -> baidu.secretKey;
+            case TENCENT -> tencent.secretKey;
+            case ALIYUN -> aliyun.apiKey;
             default -> "";
         };
     }
-
-    // Getter 和 Setter 方法
-    public TranslationEngine getTranslationEngine() { return translationEngine; }
-    public void setTranslationEngine(TranslationEngine engine) { this.translationEngine = engine; }
-
-    public String getBaiduAppId() { return baiduAppId; }
-    public void setBaiduAppId(String appId) { this.baiduAppId = appId; }
-
-    public String getBaiduSecretKey() { return baiduSecretKey; }
-    public void setBaiduSecretKey(String secretKey) { this.baiduSecretKey = secretKey; }
-
-    public String getTencentSecretId() { return tencentSecretId; }
-    public void setTencentSecretId(String secretId) { this.tencentSecretId = secretId; }
-
-    public String getTencentSecretKey() { return tencentSecretKey; }
-    public void setTencentSecretKey(String secretKey) { this.tencentSecretKey = secretKey; }
-
-    public String getAliyunApiKey() { return aliyunApiKey; }
-    public void setAliyunApiKey(String apiKey) { this.aliyunApiKey = apiKey; }
-
-    public boolean isAutoDownloadModel() { return autoDownloadModel; }
-    public void setAutoDownloadModel(boolean auto) { this.autoDownloadModel = auto; }
-
-    public String getLocalModelPath() { return localModelPath; }
-    public void setLocalModelPath(String path) { this.localModelPath = path; }
-
-    public boolean isEnabled() { return enabled; }
-    public void setEnabled(boolean enabled) { this.enabled = enabled; }
-
-    public boolean isTranslateOwn() { return translateOwn; }
-    public void setTranslateOwn(boolean translateOwn) { this.translateOwn = translateOwn; }
-
-    public boolean isChineseToEnglish() { return chineseToEnglish; }
-    public void setChineseToEnglish(boolean chineseToEnglish) { this.chineseToEnglish = chineseToEnglish; }
 }
