@@ -2,6 +2,9 @@
   "text.autoconfig.mini-chat-translator.title": "Mini Chat Translation Configuration",
   "text.autoconfig.mini-chat-translator.category.general": "General Settings",
 
+  "text.autoconfig.mini-chat-translator.option.enabled": "Enable Translation",
+  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "Enable or disable the translation function",
+
   "text.autoconfig.mini-chat-translator.option.engine": "Translation Engine",
   "text.autoconfig.mini-chat-translator.option.engine.@Tooltip": "Choose the translation service to use\\n§aLocal Model§r: Fully offline, requiring a 1.94GB model download for first use\\n§eOnline Translation§r: Requires configuration of the corresponding API key",
 
@@ -11,27 +14,18 @@
   "text.autoconfig.mini-chat-translator.option.baiduSecretKey": "Baidu Translation Secret Key",
   "text.autoconfig.mini-chat-translator.option.baiduSecretKey.@Tooltip": "The secret key applied for on the Baidu Translation Open Platform",
 
-  "text.autoconfig.mini-chat-translator.option.tencentSecretId": "Tencent Cloud Secret ID",
-  "text.autoconfig.mini-chat-translator.option.tencentSecretId.@Tooltip": "Secret ID obtained from Tencent Cloud Console",
-
-  "text.autoconfig.mini-chat-translator.option.tencentSecretKey": "Tencent Cloud Secret Key",
-  "text.autoconfig.mini-chat-translator.option.tencentSecretKey.@Tooltip": "Secret Key obtained from Tencent Cloud Console",
-
-  "text.autoconfig.mini-chat-translator.option.aliyunApiKey": "Alibaba Cloud API Key",
-  "text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip": "API Key obtained from the Aliyun console",
-
   "text.autoconfig.mini-chat-translator.option.autoDownloadModel": "Auto download model",
   "text.autoconfig.mini-chat-translator.option.autoDownloadModel.@Tooltip": "Automatically download the translation model (approximately 470MB) when first used",
 
   "text.autoconfig.mini-chat-translator.option.localModelPath": "Model Path",
   "text.autoconfig.mini-chat-translator.option.localModelPath.@Tooltip": "Custom model storage path (leave blank to use default path)",
 
-  "text.autoconfig.mini-chat-translator.option.enabled": "Enable Translation",
-  "text.autoconfig.mini-chat-translator.option.enabled.@Tooltip": "Enable or disable the translation function",
-
   "text.autoconfig.mini-chat-translator.option.translateOwn": "Translate your own messages",
   "text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip": "Whether to translate messages received by yourself",
 
   "text.autoconfig.mini-chat-translator.option.chineseToEnglish": "Translate from Chinese to English and send",
-  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "Translate the Chinese you want to send into English and send it out"
+  "text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip": "Translate the Chinese you want to send into English and send it out",
+
+  "text.autoconfig.mini-chat-translator.option.googleApiKey": "Google official API key",
+  "text.autoconfig.mini-chat-translator.option.googleApiKey.@Tooltip": "API key obtained from Google Cloud Console"
 }

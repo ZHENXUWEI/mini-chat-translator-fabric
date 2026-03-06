@@ -34,13 +34,14 @@ public class Translator {
         switch (engine) {
             case LOCAL:
                 return translateLocalAsync(text, from, to);
-            case TENCENT:
-                return translateTencentAsync(text, from, to);
-            case ALIYUN:
-                return translateAliyunAsync(text, from, to);
             case BAIDU:
-            default:
                 return translateBaiduAsync(text, from, to);
+            case GOOGLE_FREE:
+                return GoogleTranslator.translateFree(text, to);
+            case GOOGLE_OFFICIAL:
+                return GoogleTranslator.translateOfficial(text, to, config.getGoogleApiKey());
+            default:
+                return CompletableFuture.completedFuture("[未选择翻译引擎]");
         }
     }
 
@@ -50,7 +51,6 @@ public class Translator {
     private static CompletableFuture<String> translateLocalAsync(String text, String from, String to) {
         if (!PythonManager.isServerRunning()) {
             LOGGER.warn("本地翻译服务器未运行，尝试启动...");
-            // 可以在这里尝试启动服务器，或者返回错误信息
             return CompletableFuture.completedFuture("[本地翻译服务器未启动,请耐心等待,或使用在线翻译]");
         }
         return TranslationServer.translate(text, from, to);
@@ -61,43 +61,6 @@ public class Translator {
      */
     private static CompletableFuture<String> translateBaiduAsync(String text, String from, String to) {
         return CompletableFuture.supplyAsync(() -> translateBaidu(text, from, to));
-    }
-
-    /**
-     * 腾讯翻译异步实现（待完善）
-     */
-    private static CompletableFuture<String> translateTencentAsync(String text, String from, String to) {
-        return CompletableFuture.supplyAsync(() -> {
-            ClothConfig config = ClothConfig.get();
-            String secretId = config.getTencentSecretId();
-            String secretKey = config.getTencentSecretKey();
-
-            if (secretId.isEmpty() || secretKey.isEmpty()) {
-                return "[请在配置中填写腾讯云密钥]";
-            }
-
-            // TODO: 实现腾讯云翻译 API
-            // 参考文档：https://cloud.tencent.com/document/product/551
-            return "[腾讯翻译开发中]";
-        });
-    }
-
-    /**
-     * 阿里翻译异步实现（待完善）
-     */
-    private static CompletableFuture<String> translateAliyunAsync(String text, String from, String to) {
-        return CompletableFuture.supplyAsync(() -> {
-            ClothConfig config = ClothConfig.get();
-            String apiKey = config.getAliyunApiKey();
-
-            if (apiKey.isEmpty()) {
-                return "[请在配置中填写阿里云 API Key]";
-            }
-
-            // TODO: 实现阿里云翻译 API
-            // 参考文档：https://help.aliyun.com/document_detail/158257.html
-            return "[阿里翻译开发中]";
-        });
     }
 
     /**
@@ -157,6 +120,8 @@ public class Translator {
         return null;
     }
 
+    // ========== 便捷方法 ==========
+
     /**
      * 英译中异步
      */
@@ -172,10 +137,9 @@ public class Translator {
     }
 
     /**
-     * 同步翻译方法（保留向后兼容）
+     * 同步翻译方法（保留向后兼容，使用百度）
      */
     public static String translate(String text, String from, String to) {
-        // 同步方法默认使用百度翻译
         return translateBaidu(text, from, to);
     }
 

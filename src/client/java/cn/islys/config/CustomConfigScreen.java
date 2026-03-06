@@ -6,6 +6,7 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
+import me.shedaniel.clothconfig2.gui.entries.StringListEntry;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -46,12 +47,7 @@ public class CustomConfigScreen {
                 .setDefaultValue(TranslationEngine.LOCAL)
                 .setEnumNameProvider(anEnum -> {
                     if (anEnum instanceof TranslationEngine) {
-                        return switch ((TranslationEngine) anEnum) {
-                            case LOCAL -> Text.literal("🌐 本地模型 (离线免费)");
-                            case BAIDU -> Text.literal("🔵 百度翻译 (在线)");
-                            case TENCENT -> Text.literal("🐧 腾讯混元 (在线)");
-                            case ALIYUN -> Text.literal("☁️ 阿里通义 (在线)");
-                        };
+                        return Text.literal(((TranslationEngine) anEnum).getDisplayName());
                     }
                     return Text.literal(anEnum.toString());
                 })
@@ -99,41 +95,20 @@ public class CustomConfigScreen {
 
         mainCategory.addEntry(baiduSubBuilder.build());
 
-        // ===== 可折叠的腾讯翻译配置 =====
-        SubCategoryBuilder tencentSubBuilder = entryBuilder.startSubCategory(
-                Text.literal("§6§l🐧 腾讯混元配置"));
+        // ===== 可折叠的谷歌翻译配置 =====
+        SubCategoryBuilder googleSubBuilder = entryBuilder.startSubCategory(
+                Text.literal("§6§l🟢 谷歌翻译配置"));
 
-        tencentSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretId"),
-                        config.getTencentSecretId())
+        // 谷歌官方API密钥输入框
+        googleSubBuilder.add(entryBuilder.startStrField(
+                        Text.translatable("text.autoconfig.mini-chat-translator.option.googleApiKey"),
+                        config.getGoogleApiKey())
                 .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretId.@Tooltip"))
-                .setSaveConsumer(config::setTencentSecretId)
+                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.googleApiKey.@Tooltip"))
+                .setSaveConsumer(config::setGoogleApiKey)
                 .build());
 
-        tencentSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretKey"),
-                        config.getTencentSecretKey())
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.tencentSecretKey.@Tooltip"))
-                .setSaveConsumer(config::setTencentSecretKey)
-                .build());
-
-        mainCategory.addEntry(tencentSubBuilder.build());
-
-        // ===== 可折叠的阿里翻译配置 =====
-        SubCategoryBuilder aliyunSubBuilder = entryBuilder.startSubCategory(
-                Text.literal("§6§l☁️ 阿里通义配置"));
-
-        aliyunSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.aliyunApiKey"),
-                        config.getAliyunApiKey())
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.aliyunApiKey.@Tooltip"))
-                .setSaveConsumer(config::setAliyunApiKey)
-                .build());
-
-        mainCategory.addEntry(aliyunSubBuilder.build());
+        mainCategory.addEntry(googleSubBuilder.build());
 
         // 设置保存回调
         builder.setSavingRunnable(() -> AutoConfig.getConfigHolder(ClothConfig.class).save());

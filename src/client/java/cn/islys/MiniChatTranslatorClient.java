@@ -5,6 +5,7 @@ import cn.islys.config.TranslationEngine;
 import cn.islys.translator.PythonManager;
 import cn.islys.translator.TranslationServer;
 import cn.islys.util.Translator;
+import cn.islys.util.GoogleTranslator;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
@@ -166,15 +167,14 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
                     LOGGER.warn("本地翻译服务器未运行，回退到百度翻译");
                     return Translator.translateAsync(text, from, to);
                 }
-            case TENCENT:
-                // TODO: 实现腾讯翻译
-                return CompletableFuture.completedFuture("[腾讯翻译开发中]");
-            case ALIYUN:
-                // TODO: 实现阿里翻译
-                return CompletableFuture.completedFuture("[阿里翻译开发中]");
             case BAIDU:
-            default:
                 return Translator.translateAsync(text, from, to);
+            case GOOGLE_FREE:
+                return GoogleTranslator.translateFree(text, to);
+            case GOOGLE_OFFICIAL:
+                return GoogleTranslator.translateOfficial(text, to, config.getGoogleApiKey());
+            default:
+                return CompletableFuture.completedFuture("[未选择翻译引擎]");
         }
     }
 
