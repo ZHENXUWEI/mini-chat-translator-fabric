@@ -51,7 +51,7 @@ public class Translator {
         if (!PythonManager.isServerRunning()) {
             LOGGER.warn("本地翻译服务器未运行，尝试启动...");
             // 可以在这里尝试启动服务器，或者返回错误信息
-            return CompletableFuture.completedFuture("[本地翻译服务器未启动]");
+            return CompletableFuture.completedFuture("[本地翻译服务器未启动,请耐心等待,或使用在线翻译]");
         }
         return TranslationServer.translate(text, from, to);
     }

@@ -117,26 +117,45 @@ class Translator:
 
     def _load_model(self):
         """加载模型，如果不存在则下载"""
-        print(f"检查模型文件: {self.model_path}")
+        import os
+
+        # 将 Path 对象转换为字符串，并确保使用原始字符串
+        model_path_str = str(self.model_path.absolute())
+        print(f"检查模型文件: {model_path_str}")
 
         # 检查模型文件是否存在
         model_file = self.model_path / 'pytorch_model.bin'
         tokenizer_file = self.model_path / 'tokenizer_config.json'
+        sp_model_file = self.model_path / 'sentencepiece.bpe.model'
 
-        if not model_file.exists() or not tokenizer_file.exists():
+        if not model_file.exists():
+            print(f"模型文件不存在: {model_file}")
+        if not tokenizer_file.exists():
+            print(f"分词器配置文件不存在: {tokenizer_file}")
+        if not sp_model_file.exists():
+            print(f"SentencePiece模型不存在: {sp_model_file}")
+
+        if not model_file.exists() or not tokenizer_file.exists() or not sp_model_file.exists():
             print("模型文件不完整，开始下载...")
             self._download_model()
         else:
             print("模型文件已存在，跳过下载")
 
         print("正在加载模型到内存...")
-        self.tokenizer = M2M100Tokenizer.from_pretrained(str(self.model_path))
-        self.model = M2M100ForConditionalGeneration.from_pretrained(
-            str(self.model_path),
-            torch_dtype=torch.float16 if self.device.type == 'cuda' else torch.float32
-        ).to(self.device)
-        self.model.eval()
-        print("[OK] 模型加载完成！")
+        try:
+            # 使用原始字符串格式加载
+            self.tokenizer = M2M100Tokenizer.from_pretrained(model_path_str)
+            self.model = M2M100ForConditionalGeneration.from_pretrained(
+                model_path_str,
+                torch_dtype=torch.float16 if self.device.type == 'cuda' else torch.float32
+            ).to(self.device)
+            self.model.eval()
+            print("[OK] 模型加载完成！")
+        except Exception as e:
+            print(f"模型加载失败: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
     def _download_model(self):
         """从 Hugging Face 镜像下载模型"""
