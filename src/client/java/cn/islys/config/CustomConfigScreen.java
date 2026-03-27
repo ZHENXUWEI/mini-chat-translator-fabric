@@ -1,118 +1,85 @@
 package cn.islys.config;
 
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import me.shedaniel.clothconfig2.api.ConfigCategory;
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
-import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
-import me.shedaniel.clothconfig2.gui.entries.StringListEntry;
-import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import dev.isxander.yacl3.api.*;
+import dev.isxander.yacl3.api.controller.*;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 
 public class CustomConfigScreen {
 
     public static Screen create(Screen parent) {
-        ClothConfig config = ClothConfig.get();
+        ModConfig config = ModConfig.get();
 
-        ConfigBuilder builder = ConfigBuilder.create()
-                .setParentScreen(parent)
-                .setTitle(Text.translatable("text.autoconfig.mini-chat-translator.title"));
-
-        ConfigEntryBuilder entryBuilder = builder.entryBuilder();
-
-        // 主分类
-        ConfigCategory mainCategory = builder.getOrCreateCategory(
-                Text.translatable("text.autoconfig.mini-chat-translator.category.general"));
-
-        // ===== 基础设置 =====
-        mainCategory.addEntry(entryBuilder.startTextDescription(
-                Text.literal("§6§l⚙️ 基础设置")).build());
-
-        // 启用翻译开关
-        mainCategory.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.enabled"),
-                        config.isEnabled())
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.enabled.@Tooltip"))
-                .setSaveConsumer(config::setEnabled)
-                .build());
-
-        // 翻译引擎选择
-        mainCategory.addEntry(entryBuilder.startEnumSelector(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.engine"),
-                        TranslationEngine.class,
-                        config.getTranslationEngine())
-                .setDefaultValue(TranslationEngine.LOCAL)
-                .setEnumNameProvider(anEnum -> {
-                    if (anEnum instanceof TranslationEngine) {
-                        return Text.literal(((TranslationEngine) anEnum).getDisplayName());
-                    }
-                    return Text.literal(anEnum.toString());
-                })
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.engine.@Tooltip"))
-                .setSaveConsumer(config::setTranslationEngine)
-                .build());
-
-        // 启用中译英输出
-        mainCategory.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish"),
-                        config.isChineseToEnglish())
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.chineseToEnglish.@Tooltip"))
-                .setSaveConsumer(config::setChineseToEnglish)
-                .build());
-
-        // 是否翻译自己的消息
-        mainCategory.addEntry(entryBuilder.startBooleanToggle(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.translateOwn"),
-                        config.isTranslateOwn())
-                .setDefaultValue(true)
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.translateOwn.@Tooltip"))
-                .setSaveConsumer(config::setTranslateOwn)
-                .build());
-
-        // ===== 可折叠的百度翻译配置 =====
-        SubCategoryBuilder baiduSubBuilder = entryBuilder.startSubCategory(
-                Text.literal("§6§l🔵 百度翻译配置"));
-
-        baiduSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.baiduAppId"),
-                        config.getBaiduAppId())
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.baiduAppId.@Tooltip"))
-                .setSaveConsumer(config::setBaiduAppId)
-                .build());
-
-        baiduSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.baiduSecretKey"),
-                        config.getBaiduSecretKey())
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.baiduSecretKey.@Tooltip"))
-                .setSaveConsumer(config::setBaiduSecretKey)
-                .build());
-
-        mainCategory.addEntry(baiduSubBuilder.build());
-
-        // ===== 可折叠的谷歌翻译配置 =====
-        SubCategoryBuilder googleSubBuilder = entryBuilder.startSubCategory(
-                Text.literal("§6§l🟢 谷歌翻译配置"));
-
-        // 谷歌官方API密钥输入框
-        googleSubBuilder.add(entryBuilder.startStrField(
-                        Text.translatable("text.autoconfig.mini-chat-translator.option.googleApiKey"),
-                        config.getGoogleApiKey())
-                .setDefaultValue("")
-                .setTooltip(Text.translatable("text.autoconfig.mini-chat-translator.option.googleApiKey.@Tooltip"))
-                .setSaveConsumer(config::setGoogleApiKey)
-                .build());
-
-        mainCategory.addEntry(googleSubBuilder.build());
-
-        // 设置保存回调
-        builder.setSavingRunnable(() -> AutoConfig.getConfigHolder(ClothConfig.class).save());
-
-        return builder.build();
+        return YetAnotherConfigLib.createBuilder()
+                .title(Component.literal("§6§l迷你聊天翻译配置"))
+                // ===== 通用设置分类 =====
+                .category(ConfigCategory.createBuilder()
+                        .name(Component.literal("§a⚙️ 通用设置"))
+                        .option(Option.<Boolean>createBuilder()
+                                .name(Component.literal("启用翻译"))
+                                .description(OptionDescription.of(Component.literal("开启或关闭所有翻译功能")))
+                                .binding(true, () -> config.enabled, val -> { config.enabled = val; ModConfig.save(); })
+                                .controller(TickBoxControllerBuilder::create)
+                                .build())
+                        .option(Option.<TranslationEngine>createBuilder()
+                                .name(Component.literal("翻译引擎"))
+                                .description(OptionDescription.of(Component.literal("选择使用的翻译服务")))
+                                .binding(TranslationEngine.LOCAL, () -> config.translationEngine, val -> {
+                                    config.translationEngine = val;
+                                    ModConfig.save();
+                                })
+                                .controller(opt -> EnumControllerBuilder.create(opt)
+                                        .enumClass(TranslationEngine.class)
+                                        .valueFormatter(engine -> {
+                                            switch (engine) {
+                                                case LOCAL: return Component.literal("🌐 本地模型 (离线免费)");
+                                                case BAIDU: return Component.literal("🔵 百度翻译 (在线)");
+                                                case GOOGLE_FREE: return Component.literal("🟢 谷歌翻译 (免费版)");
+                                                case GOOGLE_OFFICIAL: return Component.literal("🔴 谷歌翻译 (官方API)");
+                                                default: return Component.literal(engine.name());
+                                            }
+                                        }))
+                                .build())
+                        .option(Option.<Boolean>createBuilder()
+                                .name(Component.literal("中译英发送"))
+                                .description(OptionDescription.of(Component.literal("将你要发送的中文消息翻译成英文后发出")))
+                                .binding(true, () -> config.chineseToEnglish, val -> { config.chineseToEnglish = val; ModConfig.save(); })
+                                .controller(TickBoxControllerBuilder::create)
+                                .build())
+                        .option(Option.<Boolean>createBuilder()
+                                .name(Component.literal("翻译自己的消息"))
+                                .description(OptionDescription.of(Component.literal("是否翻译自己收到的其他玩家消息")))
+                                .binding(true, () -> config.translateOwn, val -> { config.translateOwn = val; ModConfig.save(); })
+                                .controller(TickBoxControllerBuilder::create)
+                                .build())
+                        .build())
+                // ===== 百度翻译配置分类 =====
+                .category(ConfigCategory.createBuilder()
+                        .name(Component.literal("🔵 百度翻译配置"))
+                        .option(Option.<String>createBuilder()
+                                .name(Component.literal("APP ID"))
+                                .description(OptionDescription.of(Component.literal("在百度翻译开放平台申请的 APP ID")))
+                                .binding("", () -> config.baiduAppId, val -> { config.baiduAppId = val; ModConfig.save(); })
+                                .controller(StringControllerBuilder::create)
+                                .build())
+                        .option(Option.<String>createBuilder()
+                                .name(Component.literal("密钥"))
+                                .description(OptionDescription.of(Component.literal("在百度翻译开放平台申请的密钥")))
+                                .binding("", () -> config.baiduSecretKey, val -> { config.baiduSecretKey = val; ModConfig.save(); })
+                                .controller(StringControllerBuilder::create)
+                                .build())
+                        .build())
+                // ===== 谷歌翻译配置分类 =====
+                .category(ConfigCategory.createBuilder()
+                        .name(Component.literal("🟢 谷歌翻译配置"))
+                        .option(Option.<String>createBuilder()
+                                .name(Component.literal("官方 API 密钥"))
+                                .description(OptionDescription.of(Component.literal("从 Google Cloud 控制台获取的 API 密钥\n（免费版无需配置）")))
+                                .binding("", () -> config.googleApiKey, val -> { config.googleApiKey = val; ModConfig.save(); })
+                                .controller(StringControllerBuilder::create)
+                                .build())
+                        .build())
+                .build()
+                .generateScreen(parent);
     }
 }

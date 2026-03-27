@@ -1,21 +1,19 @@
 package cn.islys;
 
-import cn.islys.config.ClothConfig;
+import cn.islys.config.ModConfig;
 import cn.islys.config.TranslationEngine;
 import cn.islys.translator.PythonManager;
 import cn.islys.translator.TranslationServer;
-import cn.islys.util.Translator;
 import cn.islys.util.GoogleTranslator;
+import cn.islys.util.Translator;
+import net.minecraft.client.Minecraft;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.network.chat.Component;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,15 +29,14 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        ClothConfig.init();
+        ModConfig.load();
         LOGGER.info("聊天翻译模组已加载！");
 
-        ClothConfig config = ClothConfig.get();
+        ModConfig config = ModConfig.get();
         LOGGER.info("初始配置 - 翻译引擎: {}",
-                config.getTranslationEngine());
+                config.translationEngine);
 
-        // 如果启用本地翻译，初始化 Python 环境
-        if (config.getTranslationEngine() == TranslationEngine.LOCAL) {
+        if (config.translationEngine == TranslationEngine.LOCAL) {
             initializeLocalTranslator();
         }
 
@@ -47,21 +44,18 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
     }
 
     private void initializeLocalTranslator() {
-        // 发送首次使用提示
-        MinecraftClient.getInstance().execute(() -> {
-            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                    Text.literal("§e[翻译] 如果第一次使用本地翻译，需要下载模型文件")
+        // 发送首次使用提示（使用 player.sendSystemMessage）
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().player.sendSystemMessage(
+                    Component.literal("§e[翻译] 如果第一次使用本地翻译，需要下载模型文件")
             );
-//            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-//                    Text.literal("§e[翻译] 下载时间取决于您的网速，通常需要5-10分钟")
-//            );
-            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                    Text.literal("§e[翻译] 下载期间您可以继续游戏，模型加载完成后会自动启用")
+            Minecraft.getInstance().player.sendSystemMessage(
+                    Component.literal("§e[翻译] 下载期间您可以继续游戏，模型加载完成后会自动启用")
             );
-            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                    Text.literal("§4[翻译] 请耐心等待本地翻译模型启动")
+            Minecraft.getInstance().player.sendSystemMessage(
+                    Component.literal("§4[翻译] 请耐心等待本地翻译模型启动")
             );
-        });
+        }
 
         PythonManager.initialize().thenAccept(success -> {
             if (success) {
@@ -70,47 +64,48 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
                         TranslationServer.setPort(port);
                         LOGGER.info("✅ 本地翻译服务器已启动，端口: {}", port);
 
-                        MinecraftClient.getInstance().execute(() -> {
-                            MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                                    Text.literal("§a[翻译] 本地翻译服务器已就绪")
-                            );
+                        Minecraft.getInstance().execute(() -> {
+                            if (Minecraft.getInstance().player != null) {
+                                Minecraft.getInstance().player.sendSystemMessage(
+                                        Component.literal("§a[翻译] 本地翻译服务器已就绪")
+                                );
+                            }
                         });
                     }
                 });
             } else {
                 LOGGER.error("❌ Python环境初始化失败");
-                MinecraftClient.getInstance().execute(() -> {
-                    MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                            Text.literal("§c[翻译] 本地翻译初始化失败，请查看日志")
-                    );
+                Minecraft.getInstance().execute(() -> {
+                    if (Minecraft.getInstance().player != null) {
+                        Minecraft.getInstance().player.sendSystemMessage(
+                                Component.literal("§c[翻译] 本地翻译初始化失败，请查看日志")
+                        );
+                    }
                 });
             }
         });
     }
 
     private void setupMessageListeners() {
-        // 系统消息
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
-            if (ClothConfig.get().isEnabled()) {
+            if (ModConfig.get().enabled) {
                 processReceivedMessage(message, "GAME");
             }
             return true;
         });
 
-        // 玩家消息
         ClientReceiveMessageEvents.ALLOW_CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
-            if (ClothConfig.get().isEnabled()) {
+            if (ModConfig.get().enabled) {
                 processReceivedMessage(message, "CHAT");
             }
             return true;
         });
 
-        // 发送消息
         ClientSendMessageEvents.ALLOW_CHAT.register((message) -> {
             if (isSendingTranslated) return true;
 
-            ClothConfig config = ClothConfig.get();
-            if (config.isEnabled() && config.isChineseToEnglish()) {
+            ModConfig config = ModConfig.get();
+            if (config.enabled && config.chineseToEnglish) {
                 processSendingMessage(message);
                 return false;
             }
@@ -118,22 +113,24 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
         });
     }
 
-    private void processReceivedMessage(Text message, String source) {
+    private void processReceivedMessage(Component message, String source) {
         String originalText = message.getString();
         String cleanMessage = extractChatMessage(originalText);
 
-        if (!ClothConfig.get().isTranslateOwn() || containsChinese(cleanMessage)) {
+        if (!ModConfig.get().translateOwn || containsChinese(cleanMessage)) {
             return;
         }
 
         translateAsync(cleanMessage, "auto", "zh")
                 .thenAcceptAsync(translatedText -> {
                     if (isTranslationValid(cleanMessage, translatedText)) {
-                        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                                Text.literal("§7[翻译] " + translatedText)
-                        );
+                        if (Minecraft.getInstance().player != null) {
+                            Minecraft.getInstance().player.sendSystemMessage(
+                                    Component.literal("§7[翻译] " + translatedText)
+                            );
+                        }
                     }
-                }, MinecraftClient.getInstance()::execute);
+                }, Minecraft.getInstance()::execute);
     }
 
     private void processSendingMessage(String message) {
@@ -146,20 +143,21 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
                 .thenAcceptAsync(translatedText -> {
                     if (isTranslationValid(message, translatedText)) {
                         sendTranslatedMessage(translatedText);
-                        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(
-                                Text.literal("§7[中→英] " + translatedText)
-                        );
+                        if (Minecraft.getInstance().player != null) {
+                            Minecraft.getInstance().player.sendSystemMessage(
+                                    Component.literal("§7[中→英] " + translatedText)
+                            );
+                        }
                     } else {
                         sendTranslatedMessage(message);
                     }
-                }, MinecraftClient.getInstance()::execute);
+                }, Minecraft.getInstance()::execute);
     }
 
     private CompletableFuture<String> translateAsync(String text, String from, String to) {
-        ClothConfig config = ClothConfig.get();
+        ModConfig config = ModConfig.get();
 
-        // 根据选择的翻译引擎决定使用哪个翻译服务
-        switch (config.getTranslationEngine()) {
+        switch (config.translationEngine) {
             case LOCAL:
                 if (PythonManager.isServerRunning()) {
                     return TranslationServer.translate(text, from, to);
@@ -172,7 +170,7 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
             case GOOGLE_FREE:
                 return GoogleTranslator.translateFree(text, to);
             case GOOGLE_OFFICIAL:
-                return GoogleTranslator.translateOfficial(text, to, config.getGoogleApiKey());
+                return GoogleTranslator.translateOfficial(text, to, config.googleApiKey);
             default:
                 return CompletableFuture.completedFuture("[未选择翻译引擎]");
         }
@@ -181,8 +179,8 @@ public class MiniChatTranslatorClient implements ClientModInitializer {
     private void sendTranslatedMessage(String message) {
         isSendingTranslated = true;
         try {
-            if (MinecraftClient.getInstance().getNetworkHandler() != null) {
-                MinecraftClient.getInstance().getNetworkHandler().sendChatMessage(message);
+            if (Minecraft.getInstance().getConnection() != null) {
+                Minecraft.getInstance().getConnection().sendChat(message);
             }
         } finally {
             isSendingTranslated = false;

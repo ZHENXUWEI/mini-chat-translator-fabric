@@ -1,6 +1,6 @@
 package cn.islys.util;
 
-import cn.islys.config.ClothConfig;
+import cn.islys.config.ModConfig;  // 改成 ModConfig
 import cn.islys.config.TranslationEngine;
 import cn.islys.translator.TranslationServer;
 import cn.islys.translator.PythonManager;
@@ -26,8 +26,8 @@ public class Translator {
      * 统一的翻译入口 - 根据配置自动选择翻译引擎
      */
     public static CompletableFuture<String> translateAsync(String text, String from, String to) {
-        ClothConfig config = ClothConfig.get();
-        TranslationEngine engine = config.getTranslationEngine();
+        ModConfig config = ModConfig.get();  // 改成 ModConfig
+        TranslationEngine engine = config.translationEngine;  // 直接访问字段
 
         LOGGER.debug("使用翻译引擎: {}", engine);
 
@@ -39,7 +39,7 @@ public class Translator {
             case GOOGLE_FREE:
                 return GoogleTranslator.translateFree(text, to);
             case GOOGLE_OFFICIAL:
-                return GoogleTranslator.translateOfficial(text, to, config.getGoogleApiKey());
+                return GoogleTranslator.translateOfficial(text, to, config.googleApiKey);
             default:
                 return CompletableFuture.completedFuture("[未选择翻译引擎]");
         }
@@ -67,9 +67,9 @@ public class Translator {
      * 百度翻译实现（同步）
      */
     private static String translateBaidu(String text, String from, String to) {
-        ClothConfig config = ClothConfig.get();
-        String appId = config.getBaiduAppId();
-        String secretKey = config.getBaiduSecretKey();
+        ModConfig config = ModConfig.get();  // 改成 ModConfig
+        String appId = config.baiduAppId;
+        String secretKey = config.baiduSecretKey;
 
         if (appId.isEmpty() || secretKey.isEmpty()) {
             return "[请在配置中填写百度翻译 API 密钥]";

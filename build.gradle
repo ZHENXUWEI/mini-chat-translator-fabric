@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.14-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT'
     id 'maven-publish'
 }
 
@@ -13,73 +13,73 @@ base {
 repositories {
     mavenCentral()
     maven {
+        name = "Aliyun"
+        url = "https://maven.aliyun.com/repository/public"
+    }
+    maven {
         name = "Fabric"
         url = "https://maven.fabricmc.net/"
     }
-    // 添加 Kotlin 的仓库
     maven {
         name = "Kotlin"
         url = "https://maven.pkg.jetbrains.space/public/p/kotlin/p/kotlin/dev"
     }
-    // 添加 Cloth Config 的专属仓库
     maven {
-        name = "Shedaniel"
-        url = "https://maven.shedaniel.me/"
+        name = "YACL"
+        url = "https://maven.isxander.dev/releases"
     }
-    // 添加 Mod Menu 的专属仓库
     maven {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/releases/"
     }
-
 }
 
 loom {
+    // 启用源集分离 - Loom 会自动创建 client 源集
     splitEnvironmentSourceSets()
 
-    // 添加这一块
     mods {
         "mini-chat-translator" {
             sourceSet sourceSets.main
-            sourceSet sourceSets.client
+            sourceSet sourceSets.client  // Loom 自动创建的 client 源集
         }
     }
 
-    // 禁用有问题的 Javadoc 处理
     runs {
-        // 这会跳过 Javadoc 生成
         client {
-            // 保持默认
+            // 不需要手动指定 source，Loom 会自动处理
+            programArgs "--username", "Player"
         }
     }
 }
 
 dependencies {
+    // Minecraft 核心
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:1.21.11+build.4:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-    // 添加 Fabric Language Kotlin（会自动处理 Kotlin 依赖）
-    modImplementation "net.fabricmc:fabric-language-kotlin:1.12.3+kotlin.2.0.21"
-    include "net.fabricmc:fabric-language-kotlin:1.12.3+kotlin.2.0.21"
+    // 26.1 使用 implementation
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
+    // Fabric Language Kotlin
+    implementation "net.fabricmc:fabric-language-kotlin:1.13.0+kotlin.2.1.0"
+    include "net.fabricmc:fabric-language-kotlin:1.13.0+kotlin.2.1.0"
+
+    // 网络和 JSON 依赖
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     include 'com.squareup.okhttp3:okhttp:4.12.0'
     include 'com.squareup.okio:okio:3.6.0'
     include 'com.google.code.gson:gson:2.10.1'
 
-    // Cloth Config API
-    modImplementation("me.shedaniel.cloth:cloth-config-fabric:21.11.153") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    include "me.shedaniel.cloth:cloth-config-fabric:21.11.153"
+    // YACL 配置库
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // Mod Menu
-    modCompileOnly "com.terraformersmc:modmenu:17.0.0-beta.2"
-    modLocalRuntime "com.terraformersmc:modmenu:17.0.0-beta.2"
+    compileOnly "com.terraformersmc:modmenu:18.0.0-alpha.8"
+    runtimeOnly "com.terraformersmc:modmenu:18.0.0-alpha.8"
 
+    // 谷歌翻译官方 API
     implementation 'com.google.cloud:google-cloud-translate:2.55.0'
 }
 
@@ -91,11 +91,22 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    it.options.release = 25
 }
 
 java {
     withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
+// 解决可能出现的警告
+configurations.all {
+    resolutionStrategy {
+        force 'org.ow2.asm:asm:9.9'
+        force 'org.ow2.asm:asm-analysis:9.9'
+        force 'org.ow2.asm:asm-commons:9.9'
+        force 'org.ow2.asm:asm-tree:9.9'
+        force 'org.ow2.asm:asm-util:9.9'
+    }
 }
