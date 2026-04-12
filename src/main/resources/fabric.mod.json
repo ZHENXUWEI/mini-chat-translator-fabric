@@ -28,6 +28,7 @@
 		"java": ">=25",
 		"fabric-api": "*",
         "fabric-language-kotlin": ">=1.12.3",
-        "modmenu": ">=18.0.0-alpha.8"
+        "modmenu": ">=18.0.0-alpha.8",
+        "yet_another_config_lib_v3": ">=3.9.1+26.1-fabric"
 	}
 }
